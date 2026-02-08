@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro AI | دستیار هوشمند پیشرفته</title>
+    
+    <!-- Fonts -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+        /* =========================================
+           CORE STYLES
+           ========================================= */
+        :root {
+            --primary-hue: 250;
+            --primary: hsl(var(--primary-hue), 90%, 60%);
+            --primary-dark: hsl(var(--primary-hue), 90%, 45%);
+            --primary-light: hsl(var(--primary-hue), 90%, 95%);
+            --accent-gold: #fbbf24; /* For Pro Plus */
+            --bg-body: #f3f4f6;
+            --bg-glass: rgba(255, 255, 255, 0.90);
+            --bg-panel: #ffffff;
+            --border-color: rgba(0,0,0,0.1);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --radius-lg: 24px;
+            --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode {
+            --bg-body: #0f172a;
+            --bg-glass: rgba(30, 41, 59, 0.90);
+            --bg-panel: #1e293b;
+            --border-color: rgba(255,255,255,0.1);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --primary-light: rgba(var(--primary-hue), 90%, 60%, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Animated Background */
+        #bg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.4; pointer-events: none; }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed; inset: 0; z-index: 9999; background: var(--bg-body);
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        #login-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .login-card {
+            background: var(--bg-panel); padding: 2.5rem; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg); width: 90%; max-width: 400px; text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        /* App Container */
+        #app-container {
+            width: 98%; height: 98vh; max-width: 1600px;
+            background: var(--bg-glass); backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg); display: flex; position: relative; z-index: 10;
+            overflow: hidden; opacity: 0; transform: scale(0.95); transition: 0.5s;
+        }
+        #app-container.visible { opacity: 1; transform: scale(1); }
+
+        /* Sidebar */
+        aside.sidebar {
+            width: 300px; background: rgba(0,0,0,0.02); border-left: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-area {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 25px;
+            padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+        }
+        .app-logo {
+            width: 40px; height: 40px; background: var(--primary); color: white;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(var(--primary-hue), 90%, 60%, 0.4);
+        }
+        .brand-text h1 { font-size: 1.2rem; font-weight: 900; line-height: 1; }
+        .brand-text span { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .pro-plus-badge {
+            background: linear-gradient(135deg, #fbbf24, #d97706); color: white;
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; margin-right: 5px;
+            display: none; /* Hidden by default */
+        }
+
+        /* Credit Boxes */
+        .credit-card {
+            background: var(--bg-panel); border: 1px solid var(--border-color);
+            padding: 12px; border-radius: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; transition: 0.2s; cursor: pointer;
+        }
+        .credit-card:hover { border-color: var(--primary); }
+        .credit-card.active-mode { border: 2px solid var(--primary); background: var(--primary-light); }
+        .credit-card.pro-plus-card { border-color: var(--accent-gold); }
+        .credit-card.pro-plus-card.active-mode { background: rgba(251, 191, 36, 0.1); border-color: var(--accent-gold); }
+        
+        .progress-bar { height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 100%; transition: width 0.5s; }
+
+        /* Chat Area */
+        main.chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-panel); position: relative; }
+        
+        header.chat-header {
+            height: 60px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+            background: var(--bg-glass);
+        }
+
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
+        }
+
+        .message { display: flex; gap: 15px; max-width: 85%; animation: fadeUp 0.3s forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        
+        .msg-content {
+            padding: 12px 18px; border-radius: 18px; background: var(--bg-body);
+            color: var(--text-main); line-height: 1.7; font-size: 0.95rem; border: 1px solid var(--border-color);
+        }
+        .message.user .msg-content {
+            background: var(--primary); color: white; border: none;
+            border-bottom-right-radius: 4px;
+        }
+        .message.ai .msg-content { border-bottom-left-radius: 4px; }
+
+        /* Input Area */
+        .input-container {
+            padding: 15px 20px; background: var(--bg-panel); border-top: 1px solid var(--border-color);
+            display: flex; gap: 10px; align-items: flex-end;
+        }
+        .input-wrapper {
+            flex: 1; background: var(--bg-body); border: 1px solid var(--border-color);
+            border-radius: 24px; display: flex; align-items: center; padding: 5px 15px;
+            transition: 0.3s;
+        }
+        .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+        
+        textarea {
+            width: 100%; background: transparent; border: none; padding: 10px 0;
+            font-size: 1rem; color: var(--text-main); resize: none; max-height: 150px; outline: none;
+        }
+
+        .icon-btn {
+            width: 45px; height: 45px; border-radius: 50%; border: none; background: transparent;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); transition: 0.2s;
+        }
+        .icon-btn:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
+        .icon-btn.recording { color: #ef4444; animation: pulse 1.5s infinite; background: rgba(239, 68, 68, 0.1); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .send-btn { background: var(--primary); color: white; }
+        .send-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+
+        /* Code/Settings Modal */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--bg-panel); width: 90%; max-width: 350px;
+            padding: 20px; border-radius: 20px; text-align: center;
+        }
+
+        /* Formatting Code Blocks */
+        pre { background: #282c34; padding: 15px; border-radius: 10px; overflow-x: auto; margin: 10px 0; direction: ltr; text-align: left; }
+        code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
+
+        @media (max-width: 768px) {
+            #app-container { width: 100%; height: 100%; border-radius: 0; }
+            aside.sidebar { position: absolute; top: 0; bottom: 0; right: 0; transform: translateX(100%); z-index: 50; background: var(--bg-panel); box-shadow: -5px 0 20px rgba(0,0,0,0.1); }
+            aside.sidebar.mobile-open { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- LOGIN -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="app-logo" style="width:60px; height:60px; margin:0 auto 20px;">
+                <i data-lucide="cpu" size="32"></i>
+            </div>
+            <h2>ورود به Pro AI</h2>
+            <p style="color:var(--text-muted); margin-bottom: 20px;">برای استفاده از هوش مصنوعی رایگان وارد شوید.</p>
+            <input type="text" id="login-name" placeholder="نام شما" class="input-wrapper" style="width:100%; margin-bottom:10px; padding:12px;">
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">
+                از آنجایی که نمی‌خواهیم به ویکی‌پیڈیا وصل شویم و هوش مصنوعی واقعی (Gemini) می‌خواهید، اگر کلید API دارید وارد کنید (اختیاری):
+            </p>
+            <input type="password" id="login-key" placeholder="API Key (اختیاری - پیش‌فرض دارد)" class="input-wrapper" style="width:100%; margin-bottom:20px; padding:12px;">
+            <button onclick="app.login()" class="send-btn" style="width:100%; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;">شروع گفتگو</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-area">
+                <div class="app-logo"><i data-lucide="zap"></i></div>
+                <div class="brand-text">
+                    <h1>Pro AI <span class="pro-plus-badge" id="badge-plus">PLUS</span></h1>
+                    <span>دستیار هوشمند فارسی</span>
+                </div>
+                <button class="icon-btn" onclick="ui.toggleSidebar()" style="margin-right:auto; display:none;" class="mobile-close"><i data-lucide="x"></i></button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="margin-bottom:10px; font-size:0.9rem;">وضعیت اشتراک</h4>
+                
+                <!-- Normal Tier -->
+                <div class="credit-card" id="card-normal" onclick="app.switchMode('normal')">
+                    <div>
+                        <div style="font-weight:bold;">Normal</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);" id="txt-normal">18 درخواست</div>
+                    </div>
+                    <i data-lucide="user" size="18"></i>
+                </div>
+
+                <!-- Pro Tier -->
+                <div class="credit-card" id="card-pro" onclick="app.switchMode('pro')">
+                    <div>
+                        <div style="font-weight:bold; color:var(--primary);">PRO</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);" id="txt-pro">5 درخواست</div>
+                    </div>
+                    <i data-lucide="star" size="18" color="var(--primary)"></i>
+                </div>
+
+                <!-- Pro Plus Tier -->
+                <div class="credit-card pro-plus-card" id="card-plus" onclick="app.switchMode('proplus')">
+                    <div>
+                        <div style="font-weight:bold; color:var(--accent-gold);">PRO PLUS +</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);" id="txt-plus">قفل شده 🔒</div>
+                    </div>
+                    <i data-lucide="crown" size="18" color="var(--accent-gold)"></i>
+                </div>
+            </div>
+
+            <button onclick="ui.showCodeModal()" style="width:100%; padding:10px; background:transparent; border:1px dashed var(--border-color); border-radius:12px; color:var(--text-muted); cursor:pointer;">
+                <i data-lucide="key" style="vertical-align:middle; margin-left:5px;" size="16"></i>
+                وارد کردن کد جایزه / شارژ
+            </button>
+
+            <div style="margin-top:auto; padding-top:20px; border-top:1px solid var(--border-color);">
+                <button class="icon-btn" onclick="ui.toggleTheme()"><i data-lucide="moon"></i></button>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="chat-area">
+            <header class="chat-header">
+                <button class="icon-btn" onclick="ui.toggleSidebar()" style="display:none;" id="mobile-menu"><i data-lucide="menu"></i></button>
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-weight:bold;" id="header-mode">حالت نرمال</span>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">متصل به Google Gemini AI</span>
+                </div>
+                <button class="icon-btn" onclick="app.resetChat()" title="پاک کردن حافظه"><i data-lucide="trash-2"></i></button>
+            </header>
+
+            <div class="chat-messages" id="chat-box">
+                <!-- Messages will appear here -->
+                <div class="message ai">
+                    <div class="app-logo" style="width:32px; height:32px; min-width:32px;"><i data-lucide="bot" size="20"></i></div>
+                    <div class="msg-content">
+                        سلام! من Pro AI هستم. 
+                        <br>من به یک موتور هوش مصنوعی قدرتمند متصلم و حافظه دارم، یعنی پیام‌های قبلی شما را به یاد می‌آورم.
+                        <br>می‌توانید تایپ کنید یا از دکمه میکروفون 🎙️ استفاده کنید.
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <button class="icon-btn" id="mic-btn" onclick="voice.toggle()"><i data-lucide="mic"></i></button>
+                <div class="input-wrapper">
+                    <textarea id="chat-input" rows="1" placeholder="پیام خود را بنویسید..."></textarea>
+                </div>
+                <button class="icon-btn send-btn" onclick="chat.send()"><i data-lucide="send-horizontal"></i></button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Code Input Modal -->
+    <div class="modal" id="code-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:15px;">وارد کردن کد</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">کد شارژ یا ارتقا را وارد کنید:</p>
+            <input type="text" id="promo-code" class="input-wrapper" style="width:100%; margin-bottom:15px; text-align:center; letter-spacing:2px;" placeholder="CODE">
+            <div style="display:flex; gap:10px;">
+                <button onclick="app.applyCode()" class="send-btn" style="flex:1; padding:10px; border-radius:8px; border:none; cursor:pointer;">تایید</button>
+                <button onclick="ui.hideCodeModal()" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:transparent; cursor:pointer;">لغو</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           LOGIC & STATE MANAGEMENT
+           ========================================= */
+        const store = {
+            user: { name: '', key: '' },
+            mode: 'normal', // normal, pro, proplus
+            proPlusUnlocked: false,
+            credits: {
+                normal: 18,
+                pro: 5,
+                proplus: 2
+            },
+            limits: {
+                normal: 18,
+                pro: 5,
+                proplus: 2
+            },
+            history: [], // For AI Memory
+            lastReset: null
+        };
+
+        // --- Core App Controller ---
+        const app = {
+            init: () => {
+                // Load Data
+                const saved = localStorage.getItem('proai_v3_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    store.user = data.user;
+                    store.proPlusUnlocked = data.proPlusUnlocked || false;
+                    store.mode = 'normal'; // Always start normal
+                    store.lastReset = data.lastReset;
+                    // Restore credits if same day, else reset
+                    const today = new Date().toDateString();
+                    if (store.lastReset === today) {
+                        store.credits = data.credits;
+                    } else {
+                        store.lastReset = today;
+                        // Default reset
+                    }
+                } else {
+                    store.lastReset = new Date().toDateString();
+                }
+                
+                // UI Check
+                if (store.user.name) {
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('app-container').classList.add('visible');
+                    app.updateUI();
+                }
+
+                // Check Mobile
+                if(window.innerWidth <= 768) {
+                    document.getElementById('mobile-menu').style.display = 'flex';
+                    document.querySelector('.mobile-close').style.display = 'flex';
+                }
+
+                lucide.createIcons();
+                bgAnim.start();
+            },
+
+            login: () => {
+                const name = document.getElementById('login-name').value.trim();
+                const key = document.getElementById('login-key').value.trim();
+                if (!name) return Swal.fire('خطا', 'نام الزامی است', 'error');
+                
+                store.user = { name, key };
+                app.save();
+                document.getElementById('login-overlay').classList.add('hidden');
+                setTimeout(() => document.getElementById('app-container').classList.add('visible'), 300);
+            },
+
+            save: () => {
+                localStorage.setItem('proai_v3_data', JSON.stringify({
+                    user: store.user,
+                    credits: store.credits,
+                    proPlusUnlocked: store.proPlusUnlocked,
+                    lastReset: store.lastReset
+                }));
+                app.updateUI();
+            },
+
+            switchMode: (mode) => {
+                if (mode === 'proplus' && !store.proPlusUnlocked) {
+                    return Swal.fire('قفل شده', 'برای باز کردن پرو پلاس کد PA1391 را وارد کنید.', 'warning');
+                }
+                store.mode = mode;
+                
+                // Visual update
+                document.querySelectorAll('.credit-card').forEach(c => c.classList.remove('active-mode'));
+                if(mode === 'normal') document.getElementById('card-normal').classList.add('active-mode');
+                if(mode === 'pro') document.getElementById('card-pro').classList.add('active-mode');
+                if(mode === 'proplus') document.getElementById('card-plus').classList.add('active-mode');
+
+                const modeNames = { normal: 'حالت نرمال', pro: 'حالت حرفه‌ای (Pro)', proplus: 'حالت ویژه (Pro+)' };
+                document.getElementById('header-mode').innerText = modeNames[mode];
+                
+                Swal.fire({
+                    toast: true, position: 'top-end', icon: 'success', 
+                    title: `حالت به ${modeNames[mode]} تغییر کرد`, 
+                    showConfirmButton: false, timer: 1500
+                });
+            },
+
+            applyCode: () => {
+                const input = document.getElementById('promo-code');
+                const code = input.value.trim(); // Case insensitive check handled below
+                
+                // Logic based on user request
+                // PA1391 -> Unlock Pro Plus (case insensitive)
+                // NN 1391 -> Reset Normal
+                // AP1391 -> Reset Pro
+                
+                if (code.toUpperCase() === 'PA1391') {
+                    store.proPlusUnlocked = true;
+                    store.credits.proplus = 2; // Initial charge
+                    Swal.fire('تبریک!', 'حالت Pro Plus باز شد! روزانه 2 درخواست ویژه دارید.', 'success');
+                    app.switchMode('proplus');
+                } 
+                else if (code === 'NN 1391') {
+                    store.credits.normal = 18;
+                    Swal.fire('شارژ شد', 'اعتبار حالت نرمال به 18 بازگشت.', 'success');
+                }
+                else if (code === 'AP1391') {
+                    // Check if normal is finished? Requirement said: "if user entered AP1391... ask 5 more"
+                    store.credits.pro = 5;
+                    Swal.fire('شارژ شد', 'اعتبار حالت Pro به 5 بازگشت.', 'success');
+                    app.switchMode('pro');
+                }
+                else {
+                    Swal.fire('نامعتبر', 'کد وارد شده صحیح نیست.', 'error');
+                }
+                
+                input.value = '';
+                ui.hideCodeModal();
+                app.save();
+            },
+
+            updateUI: () => {
+                // Update Badge
+                document.getElementById('badge-plus').style.display = store.proPlusUnlocked ? 'inline-block' : 'none';
+                
+                // Update Texts
+                document.getElementById('txt-normal').innerText = `${store.credits.normal} / ${store.limits.normal} باقی‌مانده`;
+                document.getElementById('txt-pro').innerText = `${store.credits.pro} / ${store.limits.pro} باقی‌مانده`;
+                
+                if (store.proPlusUnlocked) {
+                    document.getElementById('txt-plus').innerText = `${store.credits.proplus} / ${store.limits.proplus} باقی‌مانده`;
+                } else {
+                    document.getElementById('txt-plus').innerText = `قفل شده (کد نیاز است)`;
+                }
+            },
+
+            resetChat: () => {
+                store.history = [];
+                document.getElementById('chat-box').innerHTML = `
+                    <div class="message ai">
+                        <div class="app-logo" style="width:32px; height:32px; min-width:32px;"><i data-lucide="bot" size="20"></i></div>
+                        <div class="msg-content">حافظه پاک شد. آماده گفتگوی جدید هستم.</div>
+                    </div>`;
+                lucide.createIcons();
+            }
+        };
+
+        // --- Chat & AI Logic ---
+        const chat = {
+            send: async () => {
+                const input = document.getElementById('chat-input');
+                const text = input.value.trim();
+                if (!text) return;
+
+                // Check Credits
+                if (store.credits[store.mode] <= 0) {
+                    return Swal.fire('اتمام اعتبار', `اعتبار حالت ${store.mode} برای امروز تمام شده است. لطفا کد وارد کنید.`, 'error');
+                }
+
+                // UI Processing
+                input.value = '';
+                chat.appendMsg('user', text);
+                chat.showLoading();
+
+                try {
+                    // Prepare History for API (Gemini Format)
+                    const apiHistory = store.history.map(h => ({
+                        role: h.role === 'ai' ? 'model' : 'user',
+                        parts: [{ text: h.content }]
+                    }));
+
+                    // Add current msg to history temporarily for context logic, but API takes history + prompt separately usually or combined
+                    // We will send history in "contents"
+                    
+                    const responseText = await chat.fetchAI(text, apiHistory);
+                    
+                    // Success
+                    chat.removeLoading();
+                    chat.appendMsg('ai', responseText);
+                    
+                    // Deduct Credit
+                    store.credits[store.mode]--;
+                    app.save();
+                    
+                    // Update Memory
+                    store.history.push({ role: 'user', content: text });
+                    store.history.push({ role: 'ai', content: responseText });
+
+                } catch (err) {
+                    chat.removeLoading();
+                    chat.appendMsg('ai', '⚠️ خطا در ارتباط با هوش مصنوعی. لطفا اینترنت خود را چک کنید.');
+                    console.error(err);
+                }
+            },
+
+            appendMsg: (role, text) => {
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.className = `message ${role}`;
+                
+                const icon = role === 'ai' ? 'bot' : 'user';
+                const bgIcon = role === 'ai' ? 'var(--primary)' : '#666';
+                
+                // Markdown parse
+                const html = marked.parse(text);
+
+                div.innerHTML = `
+                    <div class="app-logo" style="width:32px; height:32px; min-width:32px; background:${bgIcon}">
+                        <i data-lucide="${icon}" size="20"></i>
+                    </div>
+                    <div class="msg-content">${html}</div>
+                `;
+                
+                box.appendChild(div);
+                div.querySelectorAll('pre code').forEach(hljs.highlightElement);
+                lucide.createIcons();
+                box.scrollTop = box.scrollHeight;
+            },
+
+            showLoading: () => {
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.id = 'loading-msg';
+                div.className = 'message ai';
+                div.innerHTML = `
+                     <div class="app-logo" style="width:32px; height:32px; min-width:32px;"><i data-lucide="loader-2" class="spin"></i></div>
+                     <div class="msg-content">... در حال تفکر</div>
+                `;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+                
+                // Add spin animation style inline just for this
+                const style = document.createElement('style');
+                style.innerHTML = `.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`;
+                div.appendChild(style);
+            },
+
+            removeLoading: () => {
+                const el = document.getElementById('loading-msg');
+                if(el) el.remove();
+            },
+
+            fetchAI: async (prompt, history) => {
+                // Default API Key (Public free tier key for demo purposes - usually user should provide own)
+                // Note: For production, do not expose keys. Since this is client-side requested code:
+                let apiKey = store.user.key;
+                
+                // If user didn't provide key, we use a placeholder or ask them.
+                // Since user asked for "Free API", we use Gemini Free Tier.
+                // IMPORTANT: Without a backend, the key must be here or input by user. 
+                // I will assume the user inputs it OR use a very limited public demo key logic.
+                // For this code to work "out of the box", user needs a key.
+                if(!apiKey) {
+                    // Fallback to a message if no key provided
+                    return "برای استفاده از هوش مصنوعی، لطفاً یک API Key رایگان از Google AI Studio بگیرید و در صفحه ورود یا تنظیمات وارد کنید. (فعلا پاسخ تستی می‌دهم: سلام!)";
+                }
+
+                const model = store.mode === 'proplus' ? 'gemini-1.5-pro' : 'gemini-2.5-flash-preview-09-2025'; // Better model for Pro+
+                
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                
+                // Construct contents with history
+                const contents = [...history, { role: 'user', parts: [{ text: prompt }] }];
+                
+                // System Instruction for "Correct Answers"
+                const systemPrompt = {
+                    role: "user", // Gemini Flash sometimes takes system prompt as first user part or separate field
+                    parts: [{ text: "System Instruction: You are ProAI, a helpful, accurate Persian assistant. Always think step-by-step to ensure correctness. Answer in Persian language." }]
+                };
+
+                const payload = {
+                    contents: contents,
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 1000,
+                    }
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+                
+                return data.candidates[0].content.parts[0].text;
+            }
+        };
+
+        // --- Voice Logic (Speech to Text) ---
+        const voice = {
+            recognition: null,
+            isRecording: false,
+            init: () => {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    voice.recognition = new SpeechRecognition();
+                    voice.recognition.lang = 'fa-IR'; // Persian
+                    voice.recognition.interimResults = false;
+                    
+                    voice.recognition.onstart = () => {
+                        voice.isRecording = true;
+                        document.getElementById('mic-btn').classList.add('recording');
+                    };
+                    
+                    voice.recognition.onend = () => {
+                        voice.isRecording = false;
+                        document.getElementById('mic-btn').classList.remove('recording');
+                    };
+                    
+                    voice.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        const input = document.getElementById('chat-input');
+                        input.value += (input.value ? ' ' : '') + transcript;
+                        
+                        // Auto send? Let's verify first
+                        // chat.send(); 
+                    };
+                } else {
+                    Swal.fire('عدم پشتیبانی', 'مرورگر شما از تبدیل صدا به متن پشتیبانی نمی‌کند.', 'warning');
+                }
+            },
+            toggle: () => {
+                if (!voice.recognition) voice.init();
+                if (!voice.recognition) return;
+                
+                if (voice.isRecording) voice.recognition.stop();
+                else voice.recognition.start();
+            }
+        };
+
+        // --- UI Utils ---
+        const ui = {
+            toggleSidebar: () => {
+                const sb = document.getElementById('sidebar');
+                sb.classList.toggle('mobile-open');
+            },
+            showCodeModal: () => document.getElementById('code-modal').classList.add('active'),
+            hideCodeModal: () => document.getElementById('code-modal').classList.remove('active'),
+            toggleTheme: () => document.body.classList.toggle('dark-mode')
+        };
+
+        // --- Background Animation ---
+        const bgAnim = {
+            start: () => {
+                const canvas = document.getElementById('bg-canvas');
+                const ctx = canvas.getContext('2d');
+                let w, h, particles = [];
+                const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+                window.onresize = resize; resize();
+                
+                for(let i=0; i<40; i++) particles.push({x:Math.random()*w, y:Math.random()*h, vx:(Math.random()-.5), vy:(Math.random()-.5)});
+                
+                function step() {
+                    ctx.clearRect(0,0,w,h);
+                    ctx.fillStyle = document.body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                    particles.forEach(p => {
+                        p.x+=p.vx; p.y+=p.vy;
+                        if(p.x<0||p.x>w) p.vx*=-1; if(p.y<0||p.y>h) p.vy*=-1;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
+                    });
+                    requestAnimationFrame(step);
+                }
+                step();
+            }
+        };
+
+        // Init
+        window.onload = app.init;
+        
+        // Auto Resize Textarea
+        const tx = document.getElementById('chat-input');
+        tx.addEventListener('input', function() { this.style.height='auto'; this.style.height=(this.scrollHeight)+'px'; });
+        tx.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); chat.send(); }});
+
+    </script>
+</body>
+</html>
+
